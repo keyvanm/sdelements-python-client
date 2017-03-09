@@ -11,8 +11,23 @@ class SDElementsAPIException(Exception):
         return "{r.status_code} {r.reason}: {r.text}".format(r=self.response)
 
 
+def make_request(request_url, request_body, request_headers, request_method="GET"):
+    request_function = requests.get
+    if request_method == "POST":
+        request_function = requests.post
+    elif request_method == "PUT":
+        request_function = requests.put
+
+    response = request_function(request_url, json=request_body, headers=request_headers)
+    if not response.ok:
+        # Request did not go through because of an error, throw an exception with the response to be analyzed later
+        raise SDElementsAPIException(response)
+    return response.json()
+
+
 class SDElementsClient(object):
     business_units_api_path = "/api/v2/business-units/"
+    applications_api_path = "/api/v2/applications/"
 
     def __init__(self, api_token, sde_server="cd.sdelements.com"):
         self.api_token = api_token
@@ -55,8 +70,6 @@ class SDElementsClient(object):
             set to True and specific users/groups specified is an error. Default is false.
         :return: A dictionary representing the newly created business unit
         """
-        request_headers = self.default_headers
-
         request_url = self.build_url(self.business_units_api_path)
 
         request_body = {'name': name}
@@ -73,8 +86,24 @@ class SDElementsClient(object):
         if all_users:
             request_body['all_users'] = all_users
 
-        response = requests.post(request_url, headers=request_headers, json=request_body)
-        if not response.ok:
-            # Request did not go through because of an error, throw an exception with the response to be analyzed later
-            raise SDElementsAPIException(response)
-        return response.json()
+        return make_request(request_url, request_body, self.default_headers, "POST")
+
+    def create_application(self, business_unit_id, name, priority=None):
+        """
+        Create a new application in the SDElements server.
+
+        Check API docs at https://sdelements.github.io/slate/#create-a-new-business-unit for more info
+
+        :rtype: dict
+        :param business_unit_id: The ID of the business unit the application belongs to
+        :param name: The name of the new application
+        :param priority: Specifies the priority of the application to be either '0-none', '1-high', '2-medium' or
+            '3-low'
+        :return: A dictionary representing the newly created application
+        """
+        request_url = self.build_url(self.applications_api_path)
+        request_body = {'business_unit': business_unit_id, 'name': name}
+        if priority:
+            request_body['priority'] = priority
+
+        return make_request(request_url, request_body, self.default_headers, "POST")

@@ -9,6 +9,10 @@ if __name__ == '__main__':
     client = SDElementsClient(API_TOKEN)
 
     try:
-        print client.create_business_unit("Test BU")
+        new_business_unit = client.create_business_unit("Test BU")
+        print new_business_unit
+
+        new_application = client.create_application(new_business_unit['id'], "Test App")
+        print new_application
     except SDElementsAPIException as e:
         print e.readable_error_message
