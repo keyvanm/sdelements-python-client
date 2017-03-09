@@ -92,7 +92,7 @@ class SDElementsClient(object):
         """
         Create a new application in the SDElements server.
 
-        Check API docs at https://sdelements.github.io/slate/#create-a-new-business-unit for more info
+        Check API docs at https://sdelements.github.io/slate/#create-a-new-application for more info
 
         :rtype: dict
         :param business_unit_id: The ID of the business unit the application belongs to
